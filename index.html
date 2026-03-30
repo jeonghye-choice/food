@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘 뭐 먹지? - 밥 메뉴 추천</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color-1: #ff9a9e;
+            --bg-color-2: #fecfef;
+            --bg-color-3: #a1c4fd;
+            --bg-color-4: #c2e9fb;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Noto Sans KR', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(45deg, var(--bg-color-1), var(--bg-color-2), var(--bg-color-3), var(--bg-color-4));
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+            padding: 40px 30px;
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.8s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        h1 {
+            font-size: 26px;
+            color: #222;
+            margin-bottom: 8px;
+            font-weight: 900;
+        }
+
+        p.subtitle {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        /* Category filters */
+        .category-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .cat-btn {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .cat-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-1px);
+        }
+
+        .cat-btn.active {
+            background: #ff4757;
+            color: white;
+            border-color: #ff4757;
+            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
+        }
+
+        /* Roulette window */
+        .roulette-container {
+            width: 100%;
+            margin: 0 0 35px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .roulette-window {
+            width: 100%;
+            height: 90px;
+            overflow: hidden;
+            position: relative;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 16px;
+            box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+        }
+
+        .roulette-window::before, .roulette-window::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 25px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .roulette-window::before {
+            top: 0;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.9), transparent);
+        }
+        
+        .roulette-window::after {
+            bottom: 0;
+            background: linear-gradient(to top, rgba(255,255,255,0.9), transparent);
+        }
+
+        .roulette-items {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            transition: transform 0s;
+        }
+
+        .roulette-item {
+            height: 90px;
+            line-height: 90px;
+            font-size: 34px;
+            font-weight: 900;
+            color: #444;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 1);
+            white-space: nowrap;
+            /* centers content inside the item */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .target-item {
+            color: #ff4757;
+        }
+
+        /* Recommend Button */
+        .btn {
+            background: linear-gradient(135deg, #ff6b81, #ff4757);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-family: inherit;
+            width: 100%;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.6);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+            color: #777;
+        }
+
+        /* Particle effects */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>오늘 뭐 먹지? 🤔</h1>
+        <p class="subtitle">돌려돌려 돌림판!</p>
+        
+        <!-- Categories -->
+        <div class="category-filters" id="categoryFilters">
+            <button class="cat-btn active" data-cat="all">전체</button>
+            <button class="cat-btn" data-cat="korean">한식</button>
+            <button class="cat-btn" data-cat="chinese">중식</button>
+            <button class="cat-btn" data-cat="japanese">일식</button>
+            <button class="cat-btn" data-cat="western">양식</button>
+            <button class="cat-btn" data-cat="other">분식/기타</button>
+        </div>
+
+        <!-- Roulette Display -->
+        <div class="roulette-container">
+            <div class="roulette-window">
+                <div class="roulette-items" id="rouletteItems">
+                    <div class="roulette-item" style="color: #888; font-size: 24px;">카테고리를 고르세요 ☝️</div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn" id="recommendBtn">메뉴 추천받기</button>
+    </div>
+
+    <script>
+        // Menu Dataset mapped by category
+        const menuData = {
+            korean: ["김치찌개 🍲", "된장찌개 🥘", "제육볶음 🍛", "비빔밥 🥗", "국밥 🥣", "냉면 🍜", "삼겹살 🥓", "칼국수 🍲", "순대국 🥣", "찜닭 🍗", "부대찌개 🥘", "설렁탕 🥣", "보쌈 🥩", "백반 정식 🍚"],
+            chinese: ["짜장면 🥢", "짬뽕 🌶️", "탕수육 🍖", "마라탕 🌶️🍲", "볶음밥 🍛", "마파두부 🥘", "양꼬치 🍢"],
+            japanese: ["초밥 🍣", "돈까스 🥩", "우동 🍜", "라멘 🍜", "카레라이스 🍛", "덮밥 🍱", "샤브샤브 🍲", "소바 🍜"],
+            western: ["파스타 🍝", "피자 🍕", "스테이크 🥩", "햄버거 🍔", "샐러드 🥗", "샌드위치 🥪", "리조또 🥘"],
+            other: ["떡볶이 🥘", "김밥 🍙", "치킨 🍗", "타코 🌮", "서브웨이 🥪", "편의점 도시락 🍱", "샐러디 🥗", "포케 🥗"]
+        };
+
+        let currentCategory = 'all';
+        let isSpinning = false;
+
+        const rouletteItemsContainer = document.getElementById('rouletteItems');
+        const recommendBtn = document.getElementById('recommendBtn');
+        const categoryFilters = document.getElementById('categoryFilters');
+
+        // Handle Category Change
+        categoryFilters.addEventListener('click', (e) => {
+            if (e.target.classList.contains('cat-btn') && !isSpinning) {
+                // Update button visual state
+                document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                currentCategory = e.target.dataset.cat;
+                
+                // Reset roulette instantly to default state
+                rouletteItemsContainer.style.transition = 'none';
+                rouletteItemsContainer.style.transform = 'translateY(0)';
+                rouletteItemsContainer.innerHTML = '<div class="roulette-item" style="color: #888; font-size: 22px;">버튼을 누르세요! 🎯</div>';
+            }
+        });
+
+        // Combine all menus if "all" is selected, else return relative array
+        function getFilteredMenus() {
+            if (currentCategory === 'all') {
+                return Object.values(menuData).flat();
+            }
+            return menuData[currentCategory] || [];
+        }
+
+        // Victory Fireworks!
+        function createParticles(x, y) {
+            const colors = ['#ff4757', '#ffa502', '#2ed573', '#1e90ff', '#ff6b81', '#ffc048', '#00d8d6'];
+            
+            for (let i = 0; i < 35; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                document.body.appendChild(particle);
+
+                const size = Math.random() * 8 + 6;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 250 + 60;
+                
+                const destinationX = x + Math.cos(angle) * distance;
+                const destinationY = y + Math.sin(angle) * distance;
+
+                const animation = particle.animate([
+                    { transform: `translate(0, 0) scale(1)`, opacity: 1 },
+                    { transform: `translate(${destinationX - x}px, ${destinationY - y}px) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 800 + Math.random() * 700,
+                    easing: 'cubic-bezier(0, .9, .57, 1)'
+                });
+
+                animation.onfinish = () => particle.remove();
+            }
+        }
+
+        function recommendMenu() {
+            if (isSpinning) return;
+            
+            const menusToPick = getFilteredMenus();
+            if (menusToPick.length === 0) return;
+
+            isSpinning = true;
+            recommendBtn.disabled = true;
+            recommendBtn.textContent = "돌아가는 중... 🌀";
+
+            const itemsCount = 45; // Must be high enough for a long spin
+            const itemHeight = 90; // Matches .roulette-item css height inside JS logic
+            
+            // Random target
+            const targetMenu = menusToPick[Math.floor(Math.random() * menusToPick.length)];
+
+            // Clear current items, disable transitions for jump to start
+            rouletteItemsContainer.style.transition = 'none';
+            rouletteItemsContainer.style.transform = 'translateY(0)';
+            rouletteItemsContainer.innerHTML = '';
+
+            // Generate DOM elements for roulette slots
+            for (let i = 0; i < itemsCount; i++) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'roulette-item';
+                
+                if (i === itemsCount - 1) {
+                    itemDiv.textContent = targetMenu;
+                    itemDiv.classList.add('target-item');
+                } else {
+                    itemDiv.textContent = menusToPick[Math.floor(Math.random() * menusToPick.length)];
+                }
+                
+                rouletteItemsContainer.appendChild(itemDiv);
+            }
+
+            // Trigger structural reflow to apply transformations correctly
+            void rouletteItemsContainer.offsetWidth;
+
+            const spinDuration = 3800; // 3.8s spin time
+            
+            // Transition using a custom cubic bezier that spins fast and eases into a stop
+            rouletteItemsContainer.style.transition = `transform ${spinDuration}ms cubic-bezier(0.1, 0.7, 0.1, 1)`;
+            rouletteItemsContainer.style.transform = `translateY(-${(itemsCount - 1) * itemHeight}px)`;
+
+            // On Finish
+            setTimeout(() => {
+                isSpinning = false;
+                recommendBtn.disabled = false;
+                recommendBtn.textContent = "한 번 더 돌리기 🎲";
+
+                const rect = document.querySelector('.roulette-window').getBoundingClientRect();
+                createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            }, spinDuration);
+        }
+
+        recommendBtn.addEventListener('click', recommendMenu);
+    </script>
+</body>
+</html>
