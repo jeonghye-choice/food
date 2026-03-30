@@ -150,20 +150,37 @@
 
         .roulette-item {
             height: 90px;
-            line-height: 90px;
-            font-size: 34px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            font-size: 32px;
             font-weight: 900;
             color: #444;
             text-shadow: 1px 1px 2px rgba(255, 255, 255, 1);
             white-space: nowrap;
-            /* centers content inside the item */
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
-        .target-item {
+        .food-img {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border: 2px solid white;
+            flex-shrink: 0;
+        }
+
+        .target-item span {
             color: #ff4757;
+        }
+
+        .target-item .food-img {
+            transform: scale(1.1);
+            transition: transform 0.3s ease;
+            box-shadow: 0 6px 15px rgba(255,71,87,0.4);
+            border-color: #ff4757;
         }
 
         /* Recommend Button */
@@ -231,7 +248,7 @@
         <div class="roulette-container">
             <div class="roulette-window">
                 <div class="roulette-items" id="rouletteItems">
-                    <div class="roulette-item" style="color: #888; font-size: 24px;">카테고리를 고르세요 ☝️</div>
+                    <div class="roulette-item" style="color: #888; font-size: 24px;"><span>카테고리를 고르세요 ☝️</span></div>
                 </div>
             </div>
         </div>
@@ -240,13 +257,29 @@
     </div>
 
     <script>
-        // Menu Dataset mapped by category
+        // Menu Dataset using real generated images
         const menuData = {
-            korean: ["김치찌개 🍲", "된장찌개 🥘", "제육볶음 🍛", "비빔밥 🥗", "국밥 🥣", "냉면 🍜", "삼겹살 🥓", "칼국수 🍲", "순대국 🥣", "찜닭 🍗", "부대찌개 🥘", "설렁탕 🥣", "보쌈 🥩", "백반 정식 🍚"],
-            chinese: ["짜장면 🥢", "짬뽕 🌶️", "탕수육 🍖", "마라탕 🌶️🍲", "볶음밥 🍛", "마파두부 🥘", "양꼬치 🍢"],
-            japanese: ["초밥 🍣", "돈까스 🥩", "우동 🍜", "라멘 🍜", "카레라이스 🍛", "덮밥 🍱", "샤브샤브 🍲", "소바 🍜"],
-            western: ["파스타 🍝", "피자 🍕", "스테이크 🥩", "햄버거 🍔", "샐러드 🥗", "샌드위치 🥪", "리조또 🥘"],
-            other: ["떡볶이 🥘", "김밥 🍙", "치킨 🍗", "타코 🌮", "서브웨이 🥪", "편의점 도시락 🍱", "샐러디 🥗", "포케 🥗"]
+            korean: [
+                { name: "김치찌개", image: "./images/kimchi_stew_1774870803728.png" },
+                { name: "비빔밥", image: "./images/bibimbap_1774870824342.png" },
+                { name: "삼겹살", image: "./images/pork_belly_1774870839667.png" }
+            ],
+            chinese: [
+                { name: "짜장면", image: "./images/jajangmyeon_1774870854277.png" },
+                { name: "탕수육", image: "./images/tangsuyuk_1774870869950.png" }
+            ],
+            japanese: [
+                { name: "초밥", image: "./images/sushi_1774870884985.png" },
+                { name: "돈까스", image: "./images/tonkatsu_1774870900810.png" }
+            ],
+            western: [
+                { name: "파스타", image: "./images/pasta_1774870914397.png" },
+                { name: "피자", image: "./images/pizza_1774870931423.png" }
+            ],
+            other: [
+                { name: "치킨", image: "./images/fried_chicken_1774870944867.png" },
+                { name: "떡볶이", image: "./images/tteokbokki_1774870959792.png" }
+            ]
         };
 
         let currentCategory = 'all';
@@ -268,7 +301,7 @@
                 // Reset roulette instantly to default state
                 rouletteItemsContainer.style.transition = 'none';
                 rouletteItemsContainer.style.transform = 'translateY(0)';
-                rouletteItemsContainer.innerHTML = '<div class="roulette-item" style="color: #888; font-size: 22px;">버튼을 누르세요! 🎯</div>';
+                rouletteItemsContainer.innerHTML = '<div class="roulette-item" style="color: #888; font-size: 22px;"><span>버튼을 누르세요! 🎯</span></div>';
             }
         });
 
@@ -340,12 +373,13 @@
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'roulette-item';
                 
+                const menuObj = (i === itemsCount - 1) ? targetMenu : menusToPick[Math.floor(Math.random() * menusToPick.length)];
+                
                 if (i === itemsCount - 1) {
-                    itemDiv.textContent = targetMenu;
                     itemDiv.classList.add('target-item');
-                } else {
-                    itemDiv.textContent = menusToPick[Math.floor(Math.random() * menusToPick.length)];
                 }
+                
+                itemDiv.innerHTML = `<div class="food-img" style="background-image: url('${menuObj.image}')"></div><span>${menuObj.name}</span>`;
                 
                 rouletteItemsContainer.appendChild(itemDiv);
             }
